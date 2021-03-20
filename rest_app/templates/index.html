@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+    <title>Index</title>
+</head>
+
+<body>
+    <div id="app" class="container mt-2">
+        {% verbatim %}
+        <div class="card mb-1">
+            <div class="card-header">
+                <strong>Crear orden</strong>
+            </div>
+            <div class="card-body">
+                <div class="form-inline">
+                    <div class="input-group mb-2 mr-sm-2">
+                        <label class="mr-1">Cliente</label>
+                        <select v-model="form_data.customer_id" class="form-control" @change="onChangeCustomer($event)">
+                            <option v-for="customer in customers" :value='customer.customer_id'>{{customer.name}}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="input-group mb-2 mr-sm-2">
+                        <label class="mr-1">Productos</label>
+                        <select v-model="form_data.product_id" class="form-control" @change="onChange($event)">
+                            <option v-for="product in products" :value='product.product_id'>{{product.name}}</option>
+                        </select>
+                    </div>
+                    <div class="input-group mb-2 mr-sm-2">
+                        <label class="mr-1">Cantidad {{form_data.quantity}}</label>
+                        <input v-model="form_data.quantity" type="range" min="1" max="5" step="1">
+                    </div>
+                    <button type="button" v-on:click="onClickAdd"
+                        :disabled="!(form_data.customer_id && form_data.product_id)"
+                        class="btn btn-success mr-1">Agregar
+                        Producto</button>
+
+
+                    <div v-if="form_data.product_list.length">
+                        <strong>Productos agregados:</strong>
+                        <table class="table table-sm mt-3">
+                            <tr>
+                                <th>Cantidad</th>
+                                <th>Nombre</th>
+                                <th>Descripcion</th>
+                                <th>Precio</th>
+                                <th></th>
+                            </tr>
+
+                            <body>
+                                <tr v-for="(product,index) in form_data.product_list">
+                                    <td>{{product.quantity}}</td>
+                                    <td>{{product.name}}</td>
+                                    <td>{{product.product_description}}</td>
+                                    <td>{{product.price|formatNumber}}</td>
+                                    <td><button v-on:click="remove_product(index)"
+                                            class="btn btn-danger">Eliminar</button>
+                                    </td>
+                                </tr>
+                            </body>
+                            <tfoot>
+                                <tr>
+                                    <td><strong>Total</strong></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>
+                                        <strong>{{form_data.total|formatNumber}}</strong>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <div class="col-12">
+                        <form class="form-inline" v-on:submit.prevent="onSubmit">
+                            <div v-if="form_data.product_list.length">
+                                <input required class="form-control" type="text" v-model="form_data.delivery_address"
+                                    placeholder="Dirección de envío">
+                                <button type="submit" class="btn btn-primary">Guardar
+                                    orden</button>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <strong>Ordenes existentes</strong>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-3">
+                        <div class="form-group mb-2 mr-sm-2">
+                            <label class="mr-1">Cliente</label>
+                            <select v-model="form_data.customer_id" class="form-control"
+                                @change="onChangeCustomer($event)">
+                                <option v-for="customer in customers" :value='customer.customer_id'>{{customer.name}}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="form-group mb-2 mr-sm-2">
+                            <label class="mr-1">Fecha Inicial</label>
+                            <input v-model="firstDay" class="form-control" type="date">
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="form-group mb-2 mr-sm-2">
+                            <label class="mr-1">Fecha Final</label>
+                            <input v-model="lastDay" class="form-control" type="date">
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <button type="button" v-on:click="onClickListar" :disabled="!(form_data.customer_id)"
+                            class="btn btn-success mr-1 mt-4">Listar ordenes</button>
+                    </div>
+
+                </div>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>
+                                Creation Date
+                            </th>
+                            <th>
+                                Customer name
+                            </th>
+                            <th>
+                                Order ID
+                            </th>
+                            <th>
+                                Total $
+                            </th>
+                            <th>
+                                Delivery Address
+                            </th>
+                            <th>
+                                Products
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="order in orders">
+                            <td>{{order.creation_date}}</td>
+                            <td>{{order.customer.name}}</td>
+                            <td>{{order.order_id}}</td>
+                            <td>{{order.total |formatNumber}}</td>
+                            <td>{{order.delivery_address}}</td>
+                            <td>
+                                <div v-for="order_detail in order.order_details">
+                                    {{order_detail.quantity}} X {{order_detail.product.name}}
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
+        {% endverbatim %}
+    </div>
+
+    <script src="{% static 'main.js' %}"></script>
+</body>
+
+</html>
